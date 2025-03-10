@@ -165,7 +165,7 @@
                     .style("opacity", 0);
             });
 
-        // Add labels - FIXED POSITIONING
+        // Add labels - FIXED POSITIONING with additional text offset for the middle slice
         svg.selectAll('text')
             .data(data_ready)
             .join('text')
@@ -173,7 +173,15 @@
             .attr('transform', function(d) {
                 const pos = outerArc.centroid(d);
                 const midAngle = d.startAngle + (d.endAngle - d.startAngle) / 2;
-                pos[0] = radius * (midAngle < Math.PI ? 1.2 : -1.2); // Increased distance from pie
+                
+                // Extra adjustment for the Branded Content label specifically
+                if (d.data.name === "Branded Content") {
+                    pos[0] = radius * -1.4;  // Push it further left
+                    pos[1] = pos[1] - 10;    // Adjust vertical position slightly
+                } else {
+                    pos[0] = radius * (midAngle < Math.PI ? 1.2 : -1.2);
+                }
+                
                 return `translate(${pos})`;
             })
             .style('text-anchor', function(d) {
@@ -183,14 +191,22 @@
             .style('font-size', 14)
             .style('font-weight', 500);
 
-        // Add lines connecting slices to labels - FIXED POSITIONING
+        // Matching polyline adjustment
         svg.selectAll('polyline')
             .data(data_ready)
             .join('polyline')
             .attr('points', function(d) {
                 const pos = outerArc.centroid(d);
                 const midAngle = d.startAngle + (d.endAngle - d.startAngle) / 2;
-                pos[0] = radius * (midAngle < Math.PI ? 1.2 : -1.2); // Match the text positioning
+                
+                // Extra adjustment for the Branded Content line
+                if (d.data.name === "Branded Content") {
+                    pos[0] = radius * -1.4;  // Match the text adjustment
+                    pos[1] = pos[1] - 10;    // Match the text vertical adjustment
+                } else {
+                    pos[0] = radius * (midAngle < Math.PI ? 1.2 : -1.2);
+                }
+                
                 return [arc.centroid(d), outerArc.centroid(d), pos];
             })
             .style('fill', 'none')
