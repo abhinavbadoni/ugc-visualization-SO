@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UGC Trust Comparison</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f9f9f9;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .chart-container {
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-top: 20px;
+            padding: 20px;
+        }
+        h1 {
+            color: #4b8b3b;
+            text-align: center;
+            margin-bottom: 5px;
+        }
+        h2 {
+            color: #4b8b3b;
+            margin-bottom: 20px;
+        }
+        .subtitle {
+            color: #666;
+            text-align: center;
+            margin-top: 0;
+            margin-bottom: 30px;
+        }
+        .source {
+            color: #888;
+            text-align: center;
+            font-style: italic;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+        .tooltip {
+            position: absolute;
+            background-color: rgba(255, 255, 255, 0.9);
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 10px;
+            pointer-events: none;
+            font-size: 14px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .legend {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-right: 20px;
+        }
+        .legend-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 3px;
+            margin-right: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Why UGC Powers India's Organic Market</h1>
+        <p class="subtitle">Data Visualization of Key Metrics</p>
+        
+        <div class="chart-container">
+            <h2>Trust in Content Types</h2>
+            <div id="chart"></div>
+            <div class="legend" id="legend"></div>
+            <p class="source">Source: ShortStack</p>
+        </div>
+    </div>
+
+    <script>
+        // Data for the pie chart
+        const data = [
+            { name: "UGC Content", value: 79, color: "#4CAF50" },
+            { name: "Branded Content", value: 13, color: "#9E9E9E" },
+            { name: "Other", value: 8, color: "#E0E0E0" }
+        ];
+
+        // Set dimensions and margins
+        const width = 500;
+        const height = 400;
+        const margin = 40;
+        
+        // The radius of the pie chart is half the smallest side
+        const radius = Math.min(width, height) / 2 - margin;
+
+        // Create SVG
+        const svg = d3.select("#chart")
+            .append("svg")
+            .attr("width", width)
+            .attr("height", height)
+            .append("g")
+            .attr("transform", `translate(${width / 2}, ${height / 2})`);
+
+        // Create tooltip
+        const tooltip = d3.select("body")
+            .append("div")
+            .attr("class", "tooltip")
+            .style("opacity", 0);
+
+        // Compute the position of each group on the pie
+        const pie = d3.pie()
+            .value(d => d.value)
+            .sort(null); // Do not sort groups, preserving the order
+
+        // Map to data
+        const data_ready = pie(data);
+
+        // Arc generator
+        const arc = d3.arc()
+            .innerRadius(0)
+            .outerRadius(radius);
+
+        // Create outer arc for labels
+        const outerArc = d3.arc()
+            .innerRadius(radius * 1.1)
+            .outerRadius(radius * 1.1);
+
+        // Build the pie chart
+        svg.selectAll('path')
+            .data(data_ready)
+            .join('path')
+            .attr('d', arc)
+            .attr('fill', d => d.data.color)
+            .attr("stroke", "white")
+            .style("stroke-width", "2px")
+            .style("opacity", 0.8)
+            .on("mouseover", function(event, d) {
+                d3.select(this)
+                    .style("opacity", 1);
+                
+                tooltip.transition()
+                    .duration(200)
+                    .style("opacity", 0.9);
+                
+                tooltip.html(`${d.data.name}: ${d.data.value}%`)
+                    .style("left", (event.pageX + 10) + "px")
+                    .style("top", (event.pageY - 28) + "px");
+            })
+            .on("mouseout", function() {
+                d3.select(this)
+                    .style("opacity", 0.8);
+                
+                tooltip.transition()
+                    .duration(500)
+                    .style("opacity", 0);
+            });
+
+        // Add labels
+        svg.selectAll('text')
+            .data(data_ready)
+            .join('text')
+            .text(d => `${d.data.name}: ${d.data.value}%`)
+            .attr('transform', function(d) {
+                const pos = outerArc.centroid(d);
+                const midAngle = d.startAngle + (d.endAngle - d.startAngle) / 2;
+                pos[0] = radius * 0.95 * (midAngle < Math.PI ? 1 : -1);
+                return `translate(${pos})`;
+            })
+            .style('text-anchor', function(d) {
+                const midAngle = d.startAngle + (d.endAngle - d.startAngle) / 2;
+                return (midAngle < Math.PI ? 'start' : 'end');
+            })
+            .style('font-size', 14)
+            .style('font-weight', 500);
+
+        // Add lines connecting slices to labels
+        svg.selectAll('polyline')
+            .data(data_ready)
+            .join('polyline')
+            .attr('points', function(d) {
+                const pos = outerArc.centroid(d);
+                const midAngle = d.startAngle + (d.endAngle - d.startAngle) / 2;
+                pos[0] = radius * 0.95 * (midAngle < Math.PI ? 1 : -1);
+                return [arc.centroid(d), outerArc.centroid(d), pos];
+            })
+            .style('fill', 'none')
+            .style('stroke', '#999')
+            .style('stroke-width', 1);
+
+        // Add legend
+        const legend = d3.select("#legend");
+        
+        data.forEach(item => {
+            const legendItem = legend.append("div")
+                .attr("class", "legend-item");
+            
+            legendItem.append("div")
+                .attr("class", "legend-color")
+                .style("background-color", item.color);
+            
+            legendItem.append("span")
+                .text(item.name);
+        });
+    </script>
+</body>
+</html>
