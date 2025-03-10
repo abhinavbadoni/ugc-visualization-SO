@@ -165,7 +165,7 @@
                     .style("opacity", 0);
             });
 
-        // Add labels
+        // Add labels - FIXED POSITIONING
         svg.selectAll('text')
             .data(data_ready)
             .join('text')
@@ -173,7 +173,7 @@
             .attr('transform', function(d) {
                 const pos = outerArc.centroid(d);
                 const midAngle = d.startAngle + (d.endAngle - d.startAngle) / 2;
-                pos[0] = radius * 0.95 * (midAngle < Math.PI ? 1 : -1);
+                pos[0] = radius * (midAngle < Math.PI ? 1.2 : -1.2); // Increased distance from pie
                 return `translate(${pos})`;
             })
             .style('text-anchor', function(d) {
@@ -183,14 +183,14 @@
             .style('font-size', 14)
             .style('font-weight', 500);
 
-        // Add lines connecting slices to labels
+        // Add lines connecting slices to labels - FIXED POSITIONING
         svg.selectAll('polyline')
             .data(data_ready)
             .join('polyline')
             .attr('points', function(d) {
                 const pos = outerArc.centroid(d);
                 const midAngle = d.startAngle + (d.endAngle - d.startAngle) / 2;
-                pos[0] = radius * 0.95 * (midAngle < Math.PI ? 1 : -1);
+                pos[0] = radius * (midAngle < Math.PI ? 1.2 : -1.2); // Match the text positioning
                 return [arc.centroid(d), outerArc.centroid(d), pos];
             })
             .style('fill', 'none')
